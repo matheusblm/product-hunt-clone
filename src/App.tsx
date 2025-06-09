@@ -44,6 +44,7 @@ function App() {
   const itemRef = useRef<HTMLDivElement>(null);
   const mobileItemRef = useRef<HTMLDivElement>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
 console.log(itemsPerPage)
 
@@ -70,22 +71,31 @@ console.log(itemsPerPage)
   const observer = useRef<IntersectionObserver | null>(null);
   const lastPostElementRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (isFetchingNextPage) return;
+      if (isFetchingNextPage || isLoadingMore) return;
       if (observer.current) observer.current.disconnect();
       if (node) {
-        requestAnimationFrame(() => {
+        const isMobile = window.innerWidth <= 768;
+        const setupObserver = () => {
           observer.current = new IntersectionObserver((entries) => {
             const isIntersecting = entries[0]?.isIntersecting;
-            if (isIntersecting && hasNextPage) {
-              fetchNextPage();
+            if (isIntersecting && hasNextPage && !isLoadingMore) {
+              setIsLoadingMore(true);
+              fetchNextPage().finally(() => {
+                setIsLoadingMore(false);
+              });
             }
           });
 
           observer.current.observe(node);
-        });
+        };
+        if (isMobile) {
+          requestAnimationFrame(setupObserver);
+        } else {
+          setupObserver();
+        }
       }
     },
-    [isFetchingNextPage, fetchNextPage, hasNextPage]
+    [isFetchingNextPage, fetchNextPage, hasNextPage, isLoadingMore]
   );
 
   const posts =
