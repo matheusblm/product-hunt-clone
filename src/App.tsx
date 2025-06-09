@@ -39,22 +39,51 @@ function App() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [orderBy, setOrderBy] = useState<"POPULAR" | "NEWEST">("POPULAR");
   const itemRef = useRef<HTMLDivElement>(null);
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const calculateItemsPerPage = () => {
       if (itemRef.current) {
         const itemHeight = itemRef.current.offsetHeight;
         const windowHeight = window.innerHeight;
-        const items = Math.ceil(windowHeight / itemHeight) + 2;
-        setItemsPerPage(items);
+        const isMobile = window.innerWidth <= 768;
+        
+        // Consider card spacing (16px for mobile, 24px for desktop)
+        const cardSpacing = isMobile ? 16 : 24;
+        
+        // Calculate how many items can fit in the viewport
+        const itemsInViewport = Math.ceil(windowHeight / (itemHeight + cardSpacing));
+        
+        // Add buffer items to prevent seeing the end of the list
+        // Buffer is larger on desktop since we have 2 columns
+        const bufferItems = isMobile ? 2 : 4;
+        
+        // Calculate total items needed
+        const totalItems = itemsInViewport + bufferItems;
+        
+        // Ensure we have at least 4 items
+        const finalItems = Math.max(4, totalItems);
+        
+        setItemsPerPage(finalItems);
       }
     };
 
+    // Debounce resize calculations to avoid too many recalculations
+    const handleResize = () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      resizeTimeoutRef.current = setTimeout(calculateItemsPerPage, 150);
+    };
+
     calculateItemsPerPage();
-    window.addEventListener("resize", calculateItemsPerPage);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener("resize", calculateItemsPerPage);
+      window.removeEventListener("resize", handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -72,6 +101,10 @@ function App() {
           ? lastPage.data.posts.pageInfo.endCursor
           : undefined,
       initialPageParam: null,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     });
 
   const observer = useRef<IntersectionObserver | null>(null);
