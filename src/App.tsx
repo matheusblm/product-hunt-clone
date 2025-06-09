@@ -6,7 +6,10 @@ import { PostsOrder } from "./graphql/graphql";
 import { QueryResponse } from "./types/app";
 import { TypedDocumentString } from "./graphql/graphql";
 
-const queryString = new TypedDocumentString<QueryResponse, { first: number; after: string | null; order: PostsOrder }>(`
+const queryString = new TypedDocumentString<
+  QueryResponse,
+  { first: number; after: string | null; order: PostsOrder }
+>(`
 query PostsQuery($first: Int, $after: String, $order: PostsOrder) {
   posts(first: $first, after: $after, order: $order) {
     edges {
@@ -41,7 +44,9 @@ function App() {
   const itemRef = useRef<HTMLDivElement>(null);
   const mobileItemRef = useRef<HTMLDivElement>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+
+console.log(itemsPerPage)
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<QueryResponse>({
       queryKey: ["posts", itemsPerPage, orderBy],
@@ -69,14 +74,12 @@ function App() {
       if (observer.current) observer.current.disconnect();
       if (node) {
         requestAnimationFrame(() => {
-          observer.current = new IntersectionObserver(
-            (entries) => {
-              const isIntersecting = entries[0]?.isIntersecting;              
-              if (isIntersecting && hasNextPage) {
-                fetchNextPage();
-              }
-            },
-          );
+          observer.current = new IntersectionObserver((entries) => {
+            const isIntersecting = entries[0]?.isIntersecting;
+            if (isIntersecting && hasNextPage) {
+              fetchNextPage();
+            }
+          });
 
           observer.current.observe(node);
         });
@@ -85,26 +88,32 @@ function App() {
     [isFetchingNextPage, fetchNextPage, hasNextPage]
   );
 
-
-
-  const posts = data?.pages.flatMap((page) =>
-    page.data.posts.edges.map((edge) => edge.node)
-  ) || [];
+  const posts =
+    data?.pages.flatMap((page) =>
+      page.data.posts.edges.map((edge) => edge.node)
+    ) || [];
 
   useEffect(() => {
     const calculateItemsPerPage = () => {
       const isMobile = window.innerWidth <= 768;
       const currentRef = isMobile ? mobileItemRef.current : itemRef.current;
-      
+
       if (currentRef) {
-        const itemHeight = currentRef.offsetHeight;
+        let itemHeight = currentRef.offsetHeight;
+        if (itemHeight === 0) {
+          itemHeight = 152;
+        }
         const windowHeight = window.innerHeight;
         const cardSpacing = isMobile ? 16 : 24;
-        const itemsInViewport = Math.ceil(windowHeight / (itemHeight + cardSpacing));
-        const bufferItems = isMobile ? 6 : 4; 
+        const itemsInViewport = Math.ceil(
+          windowHeight / (itemHeight + cardSpacing)
+        );
+        const bufferItems = isMobile ? 6 : 4;
         const totalItems = itemsInViewport + bufferItems;
-        const finalItems = Math.max(4, totalItems);
+        const finalItems = Math.max(isMobile ? 2 : 5, totalItems);
         setItemsPerPage(finalItems);
+      } else {
+        setItemsPerPage(isMobile ? 5 : 12);
       }
     };
 
