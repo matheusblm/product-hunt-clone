@@ -8,10 +8,10 @@ import { TypedDocumentString } from "./graphql/graphql";
 
 const queryString = new TypedDocumentString<
   QueryResponse,
-  { first: number; after: string | null; order: PostsOrder }
+  { first: number; after: string | null; order: PostsOrder; topic?: string }
 >(`
-query PostsQuery($first: Int, $after: String, $order: PostsOrder) {
-  posts(first: $first, after: $after, order: $order) {
+query PostsQuery($first: Int, $after: String, $order: PostsOrder, $topic: String) {
+  posts(first: $first, after: $after, order: $order, topic: $topic) {
     edges {
       node {
         id
@@ -39,14 +39,11 @@ query PostsQuery($first: Int, $after: String, $order: PostsOrder) {
 
 function App() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [orderBy, setOrderBy] = useState<"POPULAR" | "NEWEST">("POPULAR");
   const itemRef = useRef<HTMLDivElement>(null);
   const mobileItemRef = useRef<HTMLDivElement>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-console.log(itemsPerPage)
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<QueryResponse>({
@@ -149,8 +146,6 @@ console.log(itemsPerPage)
     <div className="App">
       <CardList
         posts={posts}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
         orderBy={orderBy}
         setOrderBy={setOrderBy}
         lastPostElementRef={lastPostElementRef}

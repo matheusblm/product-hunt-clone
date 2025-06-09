@@ -1,10 +1,9 @@
 import React from 'react';
 import './cardList.css';
 import AppCard from '../Card';
-import Search from '../Search';
 import { CardListProps } from '../../types/app';
 
-  const LoadingSkeleton = () => (
+const LoadingSkeleton = () => (
   <div className="app-card skeleton">
     <div className="cardHeader">
       <div className="iconContainer skeleton-bg"></div>
@@ -27,15 +26,13 @@ const ErrorMessage = () => (
 
 const CardList: React.FC<CardListProps> = ({
   posts,
-  searchQuery,
-  setSearchQuery,
   orderBy,
   setOrderBy,
   lastPostElementRef,
   isFetchingNextPage,
   status,
   itemRef,
-  mobileItemRef
+  mobileItemRef,
 }) => {
   return (
     <div className="min-h-screen">
@@ -60,14 +57,6 @@ const CardList: React.FC<CardListProps> = ({
         </div>
       </div>
 
-      <div className="mobile-search">
-          <Search
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search apps..."
-          />
-      </div>
-
       <div className="desktop-header">
         <div className="container">
           <div className="desktop-header-content">
@@ -76,12 +65,6 @@ const CardList: React.FC<CardListProps> = ({
               <p>Discover amazing products</p>
             </div>
             <div className="desktop-header-actions">
-              <Search
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search apps..."
-                className="desktop-search"
-              />
               <div className="desktop-tabs">
                 <button
                   className={`desktop-tab ${orderBy === 'POPULAR' ? 'active' : 'inactive'}`}

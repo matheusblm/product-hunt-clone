@@ -25,8 +25,6 @@ export type Post = {
 
 export interface CardListProps {
   posts: Post[];
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
   orderBy: "POPULAR" | "NEWEST";
   setOrderBy: (order: "POPULAR" | "NEWEST") => void;
   lastPostElementRef: (node: HTMLDivElement | null) => void;

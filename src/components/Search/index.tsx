@@ -1,15 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './search.css';
 
 interface SearchProps {
   value: string;
-  onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  onSearch?: (value: string) => void;
 }
 
-const Search: React.FC<SearchProps> = ({ value, onChange, placeholder = "Search...", className = "" }) => {
+const Search: React.FC<SearchProps> = ({ 
+  value, 
+  placeholder = "Search...", 
+  className = "",
+  onSearch 
+}) => {
+  const [changedText, setChangedText] = useState(value);
+
   return (
+
     <div className={`search-container ${className}`}>
       <svg
         className="search-icon"
@@ -28,11 +36,20 @@ const Search: React.FC<SearchProps> = ({ value, onChange, placeholder = "Search.
       </svg>
       <input
         type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={changedText}
+        onChange={(e) => setChangedText(e.target.value)}
         placeholder={placeholder}
         className="search-input"
       />
+      {onSearch && (
+        <button 
+          className="search-button"
+          onClick={() => onSearch(changedText)}
+          type="button"
+        >
+          Search
+        </button>
+      )}
     </div>
   );
 };
