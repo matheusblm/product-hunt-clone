@@ -2,9 +2,42 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { execute } from './graphql/execute';
 import { useEffect, useRef, useCallback, useState } from 'react';
 
+interface Post {
+  id: string;
+  name: string;
+  slug: string;
+  url: string;
+  featuredAt: string | null;
+  createdAt: string;
+  description: string;
+  tagline: string;
+  votesCount: number;
+}
+
+interface PostEdge {
+  node: Post;
+  cursor: string;
+}
+
+interface PageInfo {
+  hasNextPage: boolean;
+  endCursor: string;
+}
+
+interface PostsData {
+  posts: {
+    edges: PostEdge[];
+    pageInfo: PageInfo;
+  };
+}
+
+interface QueryResponse {
+  data: PostsData;
+}
+
 function App() {
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const itemRef = useRef(null);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const itemRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const calculateItemsPerPage = () => {
@@ -55,14 +88,15 @@ function App() {
     hasNextPage,
     isFetchingNextPage,
     status
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<QueryResponse>({
     queryKey: ['posts', itemsPerPage],
     queryFn: ({ pageParam = null }) => execute(queryString, { first: itemsPerPage, after: pageParam }),
     getNextPageParam: (lastPage) => lastPage.data.posts.pageInfo.hasNextPage ? lastPage.data.posts.pageInfo.endCursor : undefined,
+    initialPageParam: null
   });
 
-  const observer = useRef();
-  const lastPostElementRef = useCallback(node => {
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isFetchingNextPage) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
@@ -73,7 +107,7 @@ function App() {
     if (node) observer.current.observe(node);
   }, [isFetchingNextPage, fetchNextPage, hasNextPage]);
 
-  if (status === 'loading') return <div>Loading...</div>;
+  if (status === 'pending') return <div>Loading...</div>;
   if (status === 'error') return <div>Error</div>;
   if (!data) return null;
 
