@@ -2,11 +2,11 @@ import React, { forwardRef } from 'react';
 import './card.css';
 import { AppCardProps } from '../../types/app';
 
-const AppCard = forwardRef<HTMLDivElement, AppCardProps>(({ name, description, votesCount, thumbnail, isDesktop = false }, ref) => {
+const AppCard = forwardRef<HTMLDivElement, AppCardProps>(({ name, description, votesCount, thumbnail, isDesktop = false, ...props }, ref) => {
   const fallbackDescription = `Check out ${name} - a great product that you'll love!`;
   
   return (
-    <div ref={ref} className={`appCard ${isDesktop ? 'isDesktop' : ''}`} style={{ height: '120px' }}>
+    <div ref={ref} className={`appCard ${isDesktop ? 'isDesktop' : ''}`} style={{ height: '120px' }} {...props}>
       <div className="cardHeader">
         <div className="iconContainer">
           {thumbnail ? (

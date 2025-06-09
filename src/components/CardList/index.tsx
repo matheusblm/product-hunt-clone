@@ -4,7 +4,7 @@ import AppCard from '../Card';
 import { CardListProps } from '../../types/app';
 
 const LoadingSkeleton = () => (
-  <div className="app-card skeleton">
+  <div className="app-card skeleton" data-testid="loading-skeleton">
     <div className="cardHeader">
       <div className="iconContainer skeleton-bg"></div>
       <div className="cardDetails">
