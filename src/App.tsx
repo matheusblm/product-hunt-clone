@@ -1,10 +1,12 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { execute } from "./graphql/execute";
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useRef, useState } from "react";
 import CardList from "./components/CardList";
 import { PostsOrder } from "./graphql/graphql";
 import { QueryResponse } from "./types/app";
 import { TypedDocumentString } from "./graphql/graphql";
+import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
+import { useItemsPerPage } from "./hooks/useItemsPerPage";
 
 const queryString = new TypedDocumentString<
   QueryResponse,
@@ -38,12 +40,11 @@ query PostsQuery($first: Int, $after: String, $order: PostsOrder, $topic: String
 `);
 
 function App() {
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [orderBy, setOrderBy] = useState<"POPULAR" | "NEWEST">("POPULAR");
   const itemRef = useRef<HTMLDivElement>(null);
   const mobileItemRef = useRef<HTMLDivElement>(null);
-  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const itemsPerPage = useItemsPerPage({ itemRef, mobileItemRef });
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<QueryResponse>({
@@ -65,82 +66,16 @@ function App() {
       refetchOnReconnect: false,
     });
 
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastPostElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isFetchingNextPage || isLoadingMore) return;
-      if (observer.current) observer.current.disconnect();
-      if (node) {
-        const isMobile = window.innerWidth <= 768;
-        const setupObserver = () => {
-          observer.current = new IntersectionObserver((entries) => {
-            const isIntersecting = entries[0]?.isIntersecting;
-            if (isIntersecting && hasNextPage && !isLoadingMore) {
-              setIsLoadingMore(true);
-              fetchNextPage().finally(() => {
-                setIsLoadingMore(false);
-              });
-            }
-          });
-
-          observer.current.observe(node);
-        };
-        if (isMobile) {
-          requestAnimationFrame(setupObserver);
-        } else {
-          setupObserver();
-        }
-      }
-    },
-    [isFetchingNextPage, fetchNextPage, hasNextPage, isLoadingMore]
-  );
+  const { lastElementRef } = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const posts =
     data?.pages.flatMap((page) =>
       page.data.posts.edges.map((edge) => edge.node)
     ) || [];
-
-  useEffect(() => {
-    const calculateItemsPerPage = () => {
-      const isMobile = window.innerWidth <= 768;
-      const currentRef = isMobile ? mobileItemRef.current : itemRef.current;
-
-      if (currentRef) {
-        let itemHeight = currentRef.offsetHeight;
-        if (itemHeight === 0) {
-          itemHeight = 152;
-        }
-        const windowHeight = window.innerHeight;
-        const cardSpacing = isMobile ? 16 : 24;
-        const itemsInViewport = Math.ceil(
-          windowHeight / (itemHeight + cardSpacing)
-        );
-        const bufferItems = isMobile ? 6 : 4;
-        const totalItems = itemsInViewport + bufferItems;
-        const finalItems = Math.max(isMobile ? 2 : 5, totalItems);
-        setItemsPerPage(finalItems);
-      } else {
-        setItemsPerPage(isMobile ? 5 : 12);
-      }
-    };
-
-    const handleResize = () => {
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-      resizeTimeoutRef.current = setTimeout(calculateItemsPerPage, 150);
-    };
-
-    calculateItemsPerPage();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="App">
@@ -148,11 +83,12 @@ function App() {
         posts={posts}
         orderBy={orderBy}
         setOrderBy={setOrderBy}
-        lastPostElementRef={lastPostElementRef}
+        lastPostElementRef={lastElementRef}
         isFetchingNextPage={isFetchingNextPage}
         status={status}
         itemRef={itemRef}
         mobileItemRef={mobileItemRef}
+        hasNextPage={hasNextPage}
       />
     </div>
   );

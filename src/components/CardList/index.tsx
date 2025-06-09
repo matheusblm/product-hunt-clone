@@ -24,6 +24,25 @@ const ErrorMessage = () => (
   </div>
 );
 
+const LoadingMore = () => (
+  <div className="loading-more">
+    <span>Loading more posts</span>
+    <span className="bouncing-dots">
+      <span className="dot dot1">.</span>
+      <span className="dot dot2">.</span>
+      <span className="dot dot3">.</span>
+    </span>
+  </div>
+);
+
+const EndOfListDivider = () => (
+  <div className="end-of-list-divider">
+    <span className="line"></span>
+    <span className="hash">#</span>
+    <span className="line"></span>
+  </div>
+);
+
 const CardList: React.FC<CardListProps> = ({
   posts,
   orderBy,
@@ -33,6 +52,7 @@ const CardList: React.FC<CardListProps> = ({
   status,
   itemRef,
   mobileItemRef,
+  hasNextPage,
 }) => {
   return (
     <div className="min-h-screen">
@@ -112,12 +132,8 @@ const CardList: React.FC<CardListProps> = ({
                   />
                 </div>
               ))}
-              {isFetchingNextPage && (
-                <div className="loading-more">
-                  <div className="loading-spinner"></div>
-                  <span>Loading more posts...</span>
-                </div>
-              )}
+              {isFetchingNextPage && <LoadingMore />}
+              {!hasNextPage && !isFetchingNextPage && posts.length > 0 && <EndOfListDivider />}
             </>
           )}
         </div>
@@ -131,22 +147,26 @@ const CardList: React.FC<CardListProps> = ({
             ) : status === 'pending' ? (
               Array(4).fill(0).map((_, index) => <LoadingSkeleton key={index} />)
             ) : (
-              posts.map((post, index) => (
-                <div
-                  key={post.id}
-                  ref={index === posts.length - 1 ? lastPostElementRef : null}
-                  className="app-card"
-                >
-                  <AppCard
-                    ref={index === 0 ? itemRef : null}
-                    name={post.name}
-                    description={post.description}
-                    votesCount={post.votesCount}
-                    thumbnail={post.thumbnail}
-                    isDesktop={true}
-                  />
-                </div>
-              ))
+              <>
+                {posts.map((post, index) => (
+                  <div
+                    key={post.id}
+                    ref={index === posts.length - 1 ? lastPostElementRef : null}
+                    className="app-card"
+                  >
+                    <AppCard
+                      ref={index === 0 ? itemRef : null}
+                      name={post.name}
+                      description={post.description}
+                      votesCount={post.votesCount}
+                      thumbnail={post.thumbnail}
+                      isDesktop={true}
+                    />
+                  </div>
+                ))}
+                {isFetchingNextPage && <LoadingMore />}
+                {!hasNextPage && !isFetchingNextPage && posts.length > 0 && <EndOfListDivider />}
+              </>
             )}
           </div>
         </div>

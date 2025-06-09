@@ -32,6 +32,7 @@ export interface CardListProps {
   status: "error" | "pending" | "success";
   itemRef: React.RefObject<HTMLDivElement | null>;
   mobileItemRef: React.RefObject<HTMLDivElement | null>;
+  hasNextPage: boolean;
 }
 
 export type PostEdge = {
