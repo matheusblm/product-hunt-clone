@@ -38,9 +38,9 @@ const CardList: React.FC<CardListProps> = ({
   return (
     <div className="min-h-screen">
       <div className="mobile-header">
-        <div className="header-content">
-          <div className="header-icon">👤</div>
-          <div className="header-date">Today, {new Date().toLocaleDateString()}</div>
+        <div className="mobile-header-text">
+          <h1>Product Hunt</h1>
+          <p>Discover amazing products</p>
         </div>
         <div className="tabs">
           <button
@@ -56,6 +56,14 @@ const CardList: React.FC<CardListProps> = ({
             Newest
           </button>
         </div>
+      </div>
+
+      <div className="mobile-search">
+          <Search
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search apps..."
+          />
       </div>
 
       <div className="desktop-header">
@@ -114,6 +122,12 @@ const CardList: React.FC<CardListProps> = ({
               </div>
             ))
           )}
+          {isFetchingNextPage && (
+            <div className="loading-more">
+              <div className="loading-spinner"></div>
+              <span>Loading more posts...</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -144,21 +158,6 @@ const CardList: React.FC<CardListProps> = ({
           </div>
         </div>
       </div>
-
-      <div className="mobile-search">
-        <Search
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search apps..."
-        />
-      </div>
-
-      {isFetchingNextPage && (
-        <div className="loading-more">
-          <div className="loading-spinner"></div>
-          <span>Loading more posts...</span>
-        </div>
-      )}
     </div>
   );
 };
