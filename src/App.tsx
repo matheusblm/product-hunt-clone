@@ -39,36 +39,75 @@ function App() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [orderBy, setOrderBy] = useState<"POPULAR" | "NEWEST">("POPULAR");
   const itemRef = useRef<HTMLDivElement>(null);
+  const mobileItemRef = useRef<HTMLDivElement>(null);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useInfiniteQuery<QueryResponse>({
+      queryKey: ["posts", itemsPerPage, orderBy],
+      queryFn: ({ pageParam = null }) =>
+        execute(queryString, {
+          first: itemsPerPage,
+          after: pageParam as string | null,
+          order: orderBy === "POPULAR" ? PostsOrder.Votes : PostsOrder.Newest,
+        }),
+      getNextPageParam: (lastPage) =>
+        lastPage.data.posts.pageInfo.hasNextPage
+          ? lastPage.data.posts.pageInfo.endCursor
+          : undefined,
+      initialPageParam: null,
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+    });
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastPostElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+      if (node) {
+        requestAnimationFrame(() => {
+          observer.current = new IntersectionObserver(
+            (entries) => {
+              const isIntersecting = entries[0]?.isIntersecting;              
+              if (isIntersecting && hasNextPage) {
+                fetchNextPage();
+              }
+            },
+          );
+
+          observer.current.observe(node);
+        });
+      }
+    },
+    [isFetchingNextPage, fetchNextPage, hasNextPage]
+  );
+
+
+
+  const posts = data?.pages.flatMap((page) =>
+    page.data.posts.edges.map((edge) => edge.node)
+  ) || [];
 
   useEffect(() => {
     const calculateItemsPerPage = () => {
-      if (itemRef.current) {
-        const itemHeight = itemRef.current.offsetHeight;
+      const isMobile = window.innerWidth <= 768;
+      const currentRef = isMobile ? mobileItemRef.current : itemRef.current;
+      
+      if (currentRef) {
+        const itemHeight = currentRef.offsetHeight;
         const windowHeight = window.innerHeight;
-        const isMobile = window.innerWidth <= 768;
-        
-        // Consider card spacing (16px for mobile, 24px for desktop)
         const cardSpacing = isMobile ? 16 : 24;
-        
-        // Calculate how many items can fit in the viewport
         const itemsInViewport = Math.ceil(windowHeight / (itemHeight + cardSpacing));
-        
-        // Add buffer items to prevent seeing the end of the list
-        // Buffer is larger on desktop since we have 2 columns
-        const bufferItems = isMobile ? 2 : 4;
-        
-        // Calculate total items needed
+        const bufferItems = isMobile ? 6 : 4; 
         const totalItems = itemsInViewport + bufferItems;
-        
-        // Ensure we have at least 4 items
         const finalItems = Math.max(4, totalItems);
-        
         setItemsPerPage(finalItems);
       }
     };
 
-    // Debounce resize calculations to avoid too many recalculations
     const handleResize = () => {
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
@@ -87,45 +126,6 @@ function App() {
     };
   }, []);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
-    useInfiniteQuery<QueryResponse>({
-      queryKey: ["posts", itemsPerPage, orderBy],
-      queryFn: ({ pageParam = null }) =>
-        execute(queryString, {
-          first: itemsPerPage,
-          after: pageParam as string | null,
-          order: orderBy === "POPULAR" ? PostsOrder.Votes : PostsOrder.Newest,
-        }),
-      getNextPageParam: (lastPage) =>
-        lastPage.data.posts.pageInfo.hasNextPage
-          ? lastPage.data.posts.pageInfo.endCursor
-          : undefined,
-      initialPageParam: null,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
-    });
-
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastPostElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isFetchingNextPage) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasNextPage) {
-          fetchNextPage();
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [isFetchingNextPage, fetchNextPage, hasNextPage]
-  );
-
-  const posts = data?.pages.flatMap((page) =>
-    page.data.posts.edges.map((edge) => edge.node)
-  ) || [];
-
   return (
     <div className="App">
       <CardList
@@ -137,6 +137,8 @@ function App() {
         lastPostElementRef={lastPostElementRef}
         isFetchingNextPage={isFetchingNextPage}
         status={status}
+        itemRef={itemRef}
+        mobileItemRef={mobileItemRef}
       />
     </div>
   );

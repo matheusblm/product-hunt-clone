@@ -33,7 +33,9 @@ const CardList: React.FC<CardListProps> = ({
   setOrderBy,
   lastPostElementRef,
   isFetchingNextPage,
-  status
+  status,
+  itemRef,
+  mobileItemRef
 }) => {
   return (
     <div className="min-h-screen">
@@ -106,27 +108,34 @@ const CardList: React.FC<CardListProps> = ({
           ) : status === 'pending' ? (
             Array(3).fill(0).map((_, index) => <LoadingSkeleton key={index} />)
           ) : (
-            posts.map((post, index) => (
-              <div
-                key={post.id}
-                ref={index === posts.length - 1 ? lastPostElementRef : null}
-                className="app-card"
-              >
-                <AppCard
-                  name={post.name}
-                  description={post.description}
-                  votesCount={post.votesCount}
-                  thumbnail={post.thumbnail}
-                  isDesktop={false}
-                />
-              </div>
-            ))
-          )}
-          {isFetchingNextPage && (
-            <div className="loading-more">
-              <div className="loading-spinner"></div>
-              <span>Loading more posts...</span>
-            </div>
+            <>
+              {posts.map((post, index) => (
+                <div
+                  key={post.id}
+                  ref={index === posts.length - 1 ? lastPostElementRef : null}
+                  className={`app-card ${index === posts.length - 1 ? 'last-card' : ''}`}
+                  style={index === posts.length - 1 ? { 
+                    minHeight: '50px',
+                    position: 'relative'
+                  } : undefined}
+                >
+                  <AppCard
+                    ref={index === 0 ? mobileItemRef : undefined}
+                    name={post.name}
+                    description={post.description}
+                    votesCount={post.votesCount}
+                    thumbnail={post.thumbnail}
+                    isDesktop={false}
+                  />
+                </div>
+              ))}
+              {isFetchingNextPage && (
+                <div className="loading-more">
+                  <div className="loading-spinner"></div>
+                  <span>Loading more posts...</span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -146,6 +155,7 @@ const CardList: React.FC<CardListProps> = ({
                   className="app-card"
                 >
                   <AppCard
+                    ref={index === 0 ? itemRef : null}
                     name={post.name}
                     description={post.description}
                     votesCount={post.votesCount}

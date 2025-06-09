@@ -32,6 +32,8 @@ export interface CardListProps {
   lastPostElementRef: (node: HTMLDivElement | null) => void;
   isFetchingNextPage: boolean;
   status: "error" | "pending" | "success";
+  itemRef: React.RefObject<HTMLDivElement | null>;
+  mobileItemRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export type PostEdge = {
