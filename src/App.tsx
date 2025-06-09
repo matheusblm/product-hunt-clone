@@ -1,42 +1,42 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { execute } from './graphql/execute';
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { execute } from "./graphql/execute";
+import { useEffect, useRef, useCallback, useState } from "react";
+import CardList from "./components/CardList";
+import { PostsOrder } from "./graphql/graphql";
+import { QueryResponse } from "./types/app";
 
-interface Post {
-  id: string;
-  name: string;
-  slug: string;
-  url: string;
-  featuredAt: string | null;
-  createdAt: string;
-  description: string;
-  tagline: string;
-  votesCount: number;
+const queryString = `
+query PostsQuery($first: Int, $after: String, $order: PostsOrder, $query: String) {
+  posts(first: $first, after: $after, order: $order, query: $query) {
+    edges {
+      node {
+        id
+        name
+        slug
+        url
+        featuredAt
+        createdAt
+        description
+        tagline
+        votesCount
+        thumbnail {
+          url
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
 }
-
-interface PostEdge {
-  node: Post;
-  cursor: string;
-}
-
-interface PageInfo {
-  hasNextPage: boolean;
-  endCursor: string;
-}
-
-interface PostsData {
-  posts: {
-    edges: PostEdge[];
-    pageInfo: PageInfo;
-  };
-}
-
-interface QueryResponse {
-  data: PostsData;
-}
+`;
 
 function App() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [orderBy, setOrderBy] = useState<"POPULAR" | "NEWEST">("POPULAR");
   const itemRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,96 +50,61 @@ function App() {
     };
 
     calculateItemsPerPage();
-    window.addEventListener('resize', calculateItemsPerPage);
+    window.addEventListener("resize", calculateItemsPerPage);
 
     return () => {
-      window.removeEventListener('resize', calculateItemsPerPage);
+      window.removeEventListener("resize", calculateItemsPerPage);
     };
   }, []);
 
-  const queryString = `
-    query PostsQuery($first: Int, $after: String) {
-      posts(first: $first, after: $after) {
-        edges {
-          node {
-            id
-            name
-            slug
-            url
-            featuredAt
-            createdAt
-            description
-            tagline
-            votesCount
-          }
-          cursor
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-      }
-    }
-  `;
-
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    status
-  } = useInfiniteQuery<QueryResponse>({
-    queryKey: ['posts', itemsPerPage],
-    queryFn: ({ pageParam = null }) => execute(queryString, { first: itemsPerPage, after: pageParam }),
-    getNextPageParam: (lastPage) => lastPage.data.posts.pageInfo.hasNextPage ? lastPage.data.posts.pageInfo.endCursor : undefined,
-    initialPageParam: null
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useInfiniteQuery<QueryResponse>({
+      queryKey: ["posts", itemsPerPage, orderBy, searchQuery],
+      queryFn: ({ pageParam = null }) =>
+        execute(queryString, {
+          first: itemsPerPage,
+          after: pageParam as string | null,
+          order: orderBy === "POPULAR" ? PostsOrder.Votes : PostsOrder.Newest,
+          query: searchQuery || undefined,
+        }),
+      getNextPageParam: (lastPage) =>
+        lastPage.data.posts.pageInfo.hasNextPage
+          ? lastPage.data.posts.pageInfo.endCursor
+          : undefined,
+      initialPageParam: null,
+    });
 
   const observer = useRef<IntersectionObserver | null>(null);
-  const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isFetchingNextPage) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasNextPage) {
-        fetchNextPage();
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [isFetchingNextPage, fetchNextPage, hasNextPage]);
+  const lastPostElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isFetchingNextPage, fetchNextPage, hasNextPage]
+  );
 
-  if (status === 'pending') return <div>Loading...</div>;
-  if (status === 'error') return <div>Error</div>;
-  if (!data) return null;
+  const posts = data?.pages.flatMap((page) =>
+    page.data.posts.edges.map((edge) => edge.node)
+  ) || [];
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Product Hunt Posts</h1>
-        <div>
-          {data.pages.map((page, i) => (
-            <div key={i}>
-              {page.data.posts.edges.map(({ node }, index) => {
-                const isLastElement = i === data.pages.length - 1 && index === page.data.posts.edges.length - 1;
-                return (
-                  <div 
-                    key={node.id}
-                    ref={index === 0 ? itemRef : (isLastElement ? lastPostElementRef : null)}
-                    className="post-item"
-                  >
-                    <h2>{node.name}</h2>
-                    <p>{node.tagline}</p>
-                    <p>Votes: {node.votesCount}</p>
-                    <a href={node.url} target="_blank" rel="noopener noreferrer">
-                      View on Product Hunt
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-          {isFetchingNextPage && <div>Loading more posts...</div>}
-        </div>
-      </header>
+      <CardList
+        posts={posts}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        orderBy={orderBy}
+        setOrderBy={setOrderBy}
+        lastPostElementRef={lastPostElementRef}
+        isFetchingNextPage={isFetchingNextPage}
+        status={status}
+      />
     </div>
   );
 }

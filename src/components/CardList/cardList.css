@@ -1,0 +1,258 @@
+/* Container Styles */
+.min-h-screen {
+    min-height: 100vh;
+  }
+  
+  /* Mobile Header */
+  .mobile-header {
+    display: none;
+    padding: 16px;
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  
+  .header-icon {
+    font-size: 24px;
+  }
+  
+  .header-date {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  /* Tabs Styles */
+  .tabs {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+  
+  .tab.active {
+    background-color: #000000;
+    color: white;
+  }
+  
+  .tab.inactive {
+    background-color: #e5e5e5;
+    color: #333;
+  }
+  
+  /* Desktop Header */
+  .desktop-header {
+    display: block;
+    padding: 32px 0;
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  
+  .desktop-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .desktop-header-text h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  
+  .desktop-header-text p {
+    color: #666;
+  }
+  
+  .desktop-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  
+  .desktop-search {
+    width: 300px;
+  }
+  
+  /* Desktop Tabs */
+  .desktop-tabs {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .desktop-tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+  
+  .desktop-tab.active {
+    background-color: #000000;
+    color: white;
+  }
+  
+  .desktop-tab.inactive {
+    background-color: #e5e5e5;
+    color: #333;
+  }
+  
+  /* Mobile Search */
+  .mobile-search {
+    display: none;
+    padding: 16px;
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  /* Content */
+  .mobile-content {
+    display: none;
+    padding: 16px;
+  }
+  
+  .desktop-content {
+    display: block;
+    padding: 32px 0;
+  }
+  
+  .app-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .app-card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Grid Styles */
+  .grid {
+    display: grid;
+    gap: 24px;
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Loading State */
+  .loading-more {
+    text-align: center;
+    padding: 16px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #666;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Skeleton Loading */
+  .skeleton {
+    opacity: 0.7;
+  }
+  
+  .skeleton-bg {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+  
+  .skeleton-title {
+    height: 20px;
+    width: 60%;
+    margin-bottom: 8px;
+  }
+  
+  .skeleton-description {
+    height: 16px;
+    width: 90%;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  /* Error State */
+  .error-container {
+    text-align: center;
+    padding: 32px;
+    background-color: #fff5f5;
+    border-radius: 8px;
+    margin: 16px;
+  }
+  
+  .error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  
+  .error-container h3 {
+    color: #e53e3e;
+    margin-bottom: 8px;
+  }
+  
+  .error-container p {
+    color: #666;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .mobile-header {
+      display: block;
+    }
+  
+    .desktop-header {
+      display: none;
+    }
+  
+    .mobile-content {
+      display: block;
+    }
+  
+    .desktop-content {
+      display: none;
+    }
+  
+    .mobile-search {
+      display: block;
+    }
+  }
+  
