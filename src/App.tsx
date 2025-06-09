@@ -4,10 +4,11 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import CardList from "./components/CardList";
 import { PostsOrder } from "./graphql/graphql";
 import { QueryResponse } from "./types/app";
+import { TypedDocumentString } from "./graphql/graphql";
 
-const queryString = `
-query PostsQuery($first: Int, $after: String, $order: PostsOrder, $query: String) {
-  posts(first: $first, after: $after, order: $order, query: $query) {
+const queryString = new TypedDocumentString<QueryResponse, { first: number; after: string | null; order: PostsOrder }>(`
+query PostsQuery($first: Int, $after: String, $order: PostsOrder) {
+  posts(first: $first, after: $after, order: $order) {
     edges {
       node {
         id
@@ -31,7 +32,7 @@ query PostsQuery($first: Int, $after: String, $order: PostsOrder, $query: String
     }
   }
 }
-`;
+`);
 
 function App() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
@@ -59,13 +60,12 @@ function App() {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<QueryResponse>({
-      queryKey: ["posts", itemsPerPage, orderBy, searchQuery],
+      queryKey: ["posts", itemsPerPage, orderBy],
       queryFn: ({ pageParam = null }) =>
         execute(queryString, {
           first: itemsPerPage,
           after: pageParam as string | null,
           order: orderBy === "POPULAR" ? PostsOrder.Votes : PostsOrder.Newest,
-          query: searchQuery || undefined,
         }),
       getNextPageParam: (lastPage) =>
         lastPage.data.posts.pageInfo.hasNextPage

@@ -65,6 +65,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 16px;
+    width: 100%;
   }
   
   .desktop-header-content {
@@ -135,6 +136,7 @@
   .desktop-content {
     display: block;
     padding: 32px 0;
+    width: 100%;
   }
   
   .app-list {
@@ -151,10 +153,11 @@
   .grid {
     display: grid;
     gap: 24px;
+    width: 100%;
   }
   
   .grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   
   /* Loading State */

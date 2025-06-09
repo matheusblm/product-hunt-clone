@@ -3,6 +3,8 @@ import './card.css';
 import { AppCardProps } from '../../types/app';
 
 const AppCard = ({ name, description, votesCount, thumbnail, isDesktop = false }: AppCardProps) => {
+  const fallbackDescription = `Check out ${name} - a great product that you'll love!`;
+  
   return (
     <div className={`appCard ${isDesktop ? 'isDesktop' : ''}`}>
       <div className="cardHeader">
@@ -15,7 +17,7 @@ const AppCard = ({ name, description, votesCount, thumbnail, isDesktop = false }
         </div>
         <div className="cardDetails">
           <h3 className="cardName">{name}</h3>
-          <p className="cardDescription">{description}</p>
+          <p className="cardDescription">{description || fallbackDescription}</p>
         </div>
         <div className="votesBadge">
           <svg
