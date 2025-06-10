@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { execute } from "./graphql/execute";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import CardList from "./components/CardList";
 import { PostsOrder } from "./graphql/graphql";
 import { QueryResponse } from "./types/app";
@@ -41,10 +41,7 @@ query PostsQuery($first: Int, $after: String, $order: PostsOrder, $topic: String
 
 function App() {
   const [orderBy, setOrderBy] = useState<"POPULAR" | "NEWEST">("POPULAR");
-  const itemRef = useRef<HTMLDivElement>(null);
-  const mobileItemRef = useRef<HTMLDivElement>(null);
-
-  const itemsPerPage = useItemsPerPage({ itemRef, mobileItemRef });
+  const { itemsPerPage, isReady } = useItemsPerPage();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<QueryResponse>({
@@ -64,6 +61,7 @@ function App() {
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: false,
+      enabled: isReady,
     });
 
   const { lastElementRef } = useInfiniteScroll({
@@ -86,8 +84,6 @@ function App() {
         lastPostElementRef={lastElementRef}
         isFetchingNextPage={isFetchingNextPage}
         status={status}
-        itemRef={itemRef}
-        mobileItemRef={mobileItemRef}
         hasNextPage={hasNextPage}
       />
     </div>

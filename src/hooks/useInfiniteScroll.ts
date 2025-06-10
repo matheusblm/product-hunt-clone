@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useEffect, useState } from "react";
 
 interface UseInfiniteScrollProps {
   hasNextPage: boolean;
@@ -12,39 +12,50 @@ export const useInfiniteScroll = ({
   fetchNextPage,
 }: UseInfiniteScrollProps) => {
   const observer = useRef<IntersectionObserver | null>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const lastElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isFetchingNextPage || isLoadingMore) return;
-      if (observer.current) observer.current.disconnect();
-      if (node) {
-        const isMobile = window.innerWidth <= 768;
-        const setupObserver = () => {
-          observer.current = new IntersectionObserver((entries) => {
-            const isIntersecting = entries[0]?.isIntersecting;
-            if (isIntersecting && hasNextPage && !isLoadingMore) {
-              setIsLoadingMore(true);
-              fetchNextPage().finally(() => {
-                setIsLoadingMore(false);
-              });
-            }
-          });
-
-          observer.current.observe(node);
-        };
-        if (isMobile) {
-          requestAnimationFrame(setupObserver);
-        } else {
-          setupObserver();
-        }
-      }
-    },
-    [isFetchingNextPage, fetchNextPage, hasNextPage, isLoadingMore]
+  const [nodeToObserve, setNodeToObserve] = useState<HTMLDivElement | null>(
+    null
   );
+  const isFetchingNextPageRef = useRef(isFetchingNextPage);
+
+  useEffect(() => {
+    isFetchingNextPageRef.current = isFetchingNextPage;
+  }, [isFetchingNextPage]);
+
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    setNodeToObserve(node);
+  }, []);
+
+  useEffect(() => {
+    if (observer.current) {
+      observer.current.disconnect();
+    }
+
+    if (!nodeToObserve || !hasNextPage) {
+      return;
+    }
+
+    observer.current = new IntersectionObserver(
+      (entries) => {
+        const isIntersecting = entries[0]?.isIntersecting;
+        if (isIntersecting && hasNextPage && !isFetchingNextPageRef.current) {
+          fetchNextPage();
+        }
+      },
+      {
+        rootMargin: "100px",
+        threshold: 0.1,
+      }
+    );
+
+    observer.current.observe(nodeToObserve);
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [nodeToObserve, hasNextPage, fetchNextPage]);
 
   return {
     lastElementRef,
-    isLoadingMore,
   };
-}; 
+};

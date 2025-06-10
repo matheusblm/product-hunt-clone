@@ -1,37 +1,25 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-interface UseItemsPerPageProps {
-  itemRef: React.RefObject<HTMLDivElement | null>;
-  mobileItemRef: React.RefObject<HTMLDivElement | null>;
-}
-
-export const useItemsPerPage = ({ itemRef, mobileItemRef }: UseItemsPerPageProps) => {
+export const useItemsPerPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [isReady, setIsReady] = useState<boolean>(false);
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const calculateItemsPerPage = () => {
+    const itemHeight = 180;
+    const windowHeight = window.innerHeight;
+    const cardSpacing = 24;
+    const itemsInViewport = Math.floor(
+      windowHeight / (itemHeight + cardSpacing)
+    );
+    const bufferItems = 2;
+    const totalItems = itemsInViewport + bufferItems;
+    const finalItems = Math.max(8, totalItems);
+    setItemsPerPage(finalItems);
+    setIsReady(true);
+  };
 
   useEffect(() => {
-    const calculateItemsPerPage = () => {
-      const isMobile = window.innerWidth <= 768;
-      const currentRef = isMobile ? mobileItemRef.current : itemRef.current;
-
-      if (currentRef) {
-        let itemHeight = currentRef.offsetHeight;
-        if (itemHeight === 0) {
-          itemHeight = 152;
-        }
-        const windowHeight = window.innerHeight;
-        const cardSpacing = isMobile ? 16 : 24;
-        const itemsInViewport = Math.ceil(
-          windowHeight / (itemHeight + cardSpacing)
-        );
-        const bufferItems = isMobile ? 6 : 4;
-        const totalItems = itemsInViewport + bufferItems;
-        const finalItems = Math.max(isMobile ? 2 : 5, totalItems);
-        setItemsPerPage(finalItems);
-      } else {
-        setItemsPerPage(isMobile ? 5 : 12);
-      }
-    };
+    calculateItemsPerPage();
 
     const handleResize = () => {
       if (resizeTimeoutRef.current) {
@@ -40,7 +28,6 @@ export const useItemsPerPage = ({ itemRef, mobileItemRef }: UseItemsPerPageProps
       resizeTimeoutRef.current = setTimeout(calculateItemsPerPage, 150);
     };
 
-    calculateItemsPerPage();
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -49,7 +36,7 @@ export const useItemsPerPage = ({ itemRef, mobileItemRef }: UseItemsPerPageProps
         clearTimeout(resizeTimeoutRef.current);
       }
     };
-  }, [itemRef, mobileItemRef]);
+  }, []);
 
-  return itemsPerPage;
-}; 
+  return { itemsPerPage, isReady };
+};

@@ -1,7 +1,7 @@
-import React from 'react';
-import './cardList.css';
-import AppCard from '../Card';
-import { CardListProps } from '../../types/app';
+import React from "react";
+import "./cardList.css";
+import AppCard from "../Card";
+import { CardListProps } from "../../types/app";
 
 const LoadingSkeleton = () => (
   <div className="app-card skeleton" data-testid="loading-skeleton">
@@ -50,51 +50,32 @@ const CardList: React.FC<CardListProps> = ({
   lastPostElementRef,
   isFetchingNextPage,
   status,
-  itemRef,
-  mobileItemRef,
   hasNextPage,
 }) => {
   return (
     <div className="min-h-screen">
-      <div className="mobile-header">
-        <div className="mobile-header-text">
-          <h1>Product Hunt</h1>
-          <p>Discover amazing products</p>
-        </div>
-        <div className="tabs">
-          <button
-            className={`tab ${orderBy === 'POPULAR' ? 'active' : 'inactive'}`}
-            onClick={() => setOrderBy('POPULAR')}
-          >
-            Popular
-          </button>
-          <button
-            className={`tab ${orderBy === 'NEWEST' ? 'active' : 'inactive'}`}
-            onClick={() => setOrderBy('NEWEST')}
-          >
-            Newest
-          </button>
-        </div>
-      </div>
-
-      <div className="desktop-header">
+      <div className="header">
         <div className="container">
-          <div className="desktop-header-content">
-            <div className="desktop-header-text">
+          <div className="header-content">
+            <div className="header-text">
               <h1>Product Hunt</h1>
               <p>Discover amazing products</p>
             </div>
-            <div className="desktop-header-actions">
-              <div className="desktop-tabs">
+            <div className="header-actions">
+              <div className="tabs">
                 <button
-                  className={`desktop-tab ${orderBy === 'POPULAR' ? 'active' : 'inactive'}`}
-                  onClick={() => setOrderBy('POPULAR')}
+                  className={`tab ${
+                    orderBy === "POPULAR" ? "active" : "inactive"
+                  }`}
+                  onClick={() => setOrderBy("POPULAR")}
                 >
                   Popular
                 </button>
                 <button
-                  className={`desktop-tab ${orderBy === 'NEWEST' ? 'active' : 'inactive'}`}
-                  onClick={() => setOrderBy('NEWEST')}
+                  className={`tab ${
+                    orderBy === "NEWEST" ? "active" : "inactive"
+                  }`}
+                  onClick={() => setOrderBy("NEWEST")}
                 >
                   Newest
                 </button>
@@ -104,72 +85,44 @@ const CardList: React.FC<CardListProps> = ({
         </div>
       </div>
 
-      <div className="mobile-content">
-        <div className="app-list">
-          {status === 'error' ? (
-            <ErrorMessage />
-          ) : status === 'pending' ? (
-            Array(3).fill(0).map((_, index) => <LoadingSkeleton key={index} />)
-          ) : (
-            <>
-              {posts.map((post, index) => (
-                <div
-                  key={post.id}
-                  ref={index === posts.length - 1 ? lastPostElementRef : null}
-                  className={`app-card ${index === posts.length - 1 ? 'last-card' : ''}`}
-                  style={index === posts.length - 1 ? { 
-                    minHeight: '50px',
-                    position: 'relative'
-                  } : undefined}
-                >
-                  <AppCard
-                    ref={index === 0 ? mobileItemRef : undefined}
-                    name={post.name}
-                    description={post.description}
-                    votesCount={post.votesCount}
-                    thumbnail={post.thumbnail}
-                    isDesktop={false}
-                  />
-                </div>
+      <div className="main-content-area">
+        {status === "error" ? (
+          <ErrorMessage />
+        ) : status === "pending" ? (
+          <div className="grid">
+            {Array(3)
+              .fill(0)
+              .map((_, index) => (
+                <LoadingSkeleton key={index} />
               ))}
-              {isFetchingNextPage && <LoadingMore />}
-              {!hasNextPage && !isFetchingNextPage && posts.length > 0 && <EndOfListDivider />}
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="desktop-content">
-        <div className="container">
-          <div className="grid grid-cols-2">
-            {status === 'error' ? (
-              <ErrorMessage />
-            ) : status === 'pending' ? (
-              Array(4).fill(0).map((_, index) => <LoadingSkeleton key={index} />)
-            ) : (
-              <>
-                {posts.map((post, index) => (
-                  <div
-                    key={post.id}
-                    ref={index === posts.length - 1 ? lastPostElementRef : null}
-                    className="app-card"
-                  >
-                    <AppCard
-                      ref={index === 0 ? itemRef : null}
-                      name={post.name}
-                      description={post.description}
-                      votesCount={post.votesCount}
-                      thumbnail={post.thumbnail}
-                      isDesktop={true}
-                    />
-                  </div>
-                ))}
-                {isFetchingNextPage && <LoadingMore />}
-                {!hasNextPage && !isFetchingNextPage && posts.length > 0 && <EndOfListDivider />}
-              </>
-            )}
           </div>
-        </div>
+        ) : (
+          <div className="grid">
+            {posts.map((post, index) => (
+              <div
+                key={post.id}
+                ref={
+                  hasNextPage && index === posts.length - 1
+                    ? lastPostElementRef
+                    : null
+                }
+                className="app-card"
+              >
+                <AppCard
+                  name={post.name}
+                  description={post.description}
+                  votesCount={post.votesCount}
+                  thumbnail={post.thumbnail}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isFetchingNextPage && <LoadingMore />}
+        {!hasNextPage && !isFetchingNextPage && posts.length > 0 && (
+          <EndOfListDivider />
+        )}
       </div>
     </div>
   );
